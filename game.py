@@ -14,6 +14,14 @@ from pygame.locals import (
 SCREEN_WIDTH  = 1000
 SCREEN_HEIGHT = 500
 
+j=2.00 # initial speed of enemy
+
+red=255,0,0
+green=0,255,0
+black=0,0,0
+white=255,255,255
+k=0
+
 # Define the Player object by extending pygame.sprite.Sprite, Instead of a surface, use an image for a better-looking sprite
 
 class Player(pygame.sprite.Sprite):
@@ -56,7 +64,7 @@ class Enemy(pygame.sprite.Sprite):
                     random.randint(0, SCREEN_HEIGHT),
                    )
         )
-        self.speed =2       #This specifies how fast this enemy moves towards the player.
+        self.speed =j       #This specifies how fast this enemy moves towards the player.
 
     # Move the sprite based on speed, and Remove the sprite when it passes the left edge of the screen
     def update(self):
@@ -79,6 +87,33 @@ class Cloud(pygame.sprite.Sprite):
         if self.rect.right < 0:
             self.kill()
 
+
+# font for score------------------------------------------
+pygame.font.init()            
+smallfont=pygame.font.SysFont("comicsansms",25)
+
+def score(score):
+    text_score=pygame.font.SysFont("comicsansms",25)
+    screen_score = text_score.render("Score:"+str(score),True, red)
+    screen.blit(screen_score, [0,0])
+
+
+def message_to_screen(msg,color,size,msg_x,msg_y):
+    font=pygame.font.SysFont("comicsansms",size)   # To generate a text object
+    screen_text = font.render(msg,True, color)
+    screen.blit(screen_text, [msg_x,msg_y])  
+    
+
+def game_over():
+    message_to_screen("GAME OVER",red,80,250,200)
+    message_to_screen("press q to quit",black,50,300,270)
+    pygame.display.update()
+    game_over_var=True
+    while game_over_var:
+        for event_gor in pygame.event.get():
+            if event_gor.type==KEYDOWN:
+                if event_gor.key == pygame.K_q:
+                    pygame.quit()
 
 
 clock = pygame.time.Clock()     # Setup the clock for a decent framerate
@@ -114,8 +149,17 @@ all_sprites.add(player)
 pygame.mixer.music.load("airplane.mp3")
 pygame.mixer.music.play(loops=-1)
 
+i=0
 
 while running:
+    if i%50==0:
+        print("-> Score= ",i)
+        j=j+0.1 # increasing the speed of enemy by 0.1 when i%50==0
+        print(f'-> Speed= {j:.2f}')     #we print only two decimal place of the speed
+        i=i+1
+    else:
+        i=i+1
+        
     for event in pygame.event.get():
         if event.type == KEYDOWN:
             if event.key == K_ESCAPE:
@@ -156,12 +200,22 @@ while running:
         screen.blit(entity.surf, entity.rect)
 
     if pygame.sprite.spritecollideany(player, enemies):   # If so, then remove the player and stop the loop
+        pygame.display.update()
         player.kill()
         running = False
+        game_over_var=True
+        pygame.mixer.music.stop()
+        pygame.mixer.quit()
+        game_over()
     
     screen.blit(player.surf, player.rect)       # Draw the player on the screen
+
+    
+    k=(k+0.1)
+    score(int(k))
+    
     pygame.display.flip()
-    clock.tick(100)        # Ensure program maintains a rate of 30 frames per second
+    clock.tick(100)        # Ensure program maintains a rate of 100 frames per second
 
 pygame.mixer.music.stop()
 pygame.mixer.quit()    
